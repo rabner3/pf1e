@@ -2,12 +2,18 @@ import { useQuery } from "@tanstack/react-query";
 import { type Character } from "@shared/schema";
 import { CharacterCard } from "@/components/CharacterCard";
 import { AddCharacterDialog } from "@/components/AddCharacterDialog";
+import { TurnTracker } from "@/components/TurnTracker";
 import { Skull } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
   const { data: characters = [], isLoading } = useQuery<Character[]>({
     queryKey: ["/api/characters"],
   });
+
+  // Turn tracking state
+  const [currentTurn, setCurrentTurn] = useState(0);
+  const [currentRound, setCurrentRound] = useState(1);
 
   // Sort characters by initiative in descending order
   const sortedCharacters = [...characters].sort((a, b) => {
@@ -15,6 +21,28 @@ export default function Home() {
     const initiativeB = b.initiative ?? 0;
     return initiativeB - initiativeA;
   });
+
+  const handleNextTurn = () => {
+    if (currentTurn >= sortedCharacters.length - 1) {
+      // Start a new round
+      setCurrentTurn(0);
+      setCurrentRound(currentRound + 1);
+    } else {
+      setCurrentTurn(currentTurn + 1);
+    }
+  };
+
+  const handlePreviousTurn = () => {
+    if (currentTurn <= 0) {
+      // Go to previous round
+      if (currentRound > 1) {
+        setCurrentTurn(sortedCharacters.length - 1);
+        setCurrentRound(currentRound - 1);
+      }
+    } else {
+      setCurrentTurn(currentTurn - 1);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -57,11 +85,20 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sortedCharacters.map((character) => (
-              <CharacterCard key={character.id} character={character} />
-            ))}
-          </div>
+          <>
+            <TurnTracker
+              characters={sortedCharacters}
+              currentTurn={currentTurn}
+              currentRound={currentRound}
+              onNextTurn={handleNextTurn}
+              onPreviousTurn={handlePreviousTurn}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sortedCharacters.map((character) => (
+                <CharacterCard key={character.id} character={character} />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
