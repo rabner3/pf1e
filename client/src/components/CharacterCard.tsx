@@ -41,7 +41,8 @@ export function CharacterCard({ character }: CharacterCardProps) {
   const updateStatusMutation = useMutation({
     mutationFn: async (status: string) => {
       return apiRequest("PATCH", `/api/characters/${character.id}`, {
-        status,
+        // Convert "none" to empty string when sending to server
+        status: status === "none" ? "" : status,
       });
     },
     onSuccess: () => {
@@ -155,14 +156,14 @@ export function CharacterCard({ character }: CharacterCardProps) {
               </Button>
             </div>
             <Select
-              value={character.status || ""}
+              value={character.status || "none"}
               onValueChange={(value) => updateStatusMutation.mutate(value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Set status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {STATUS_OPTIONS.map((status) => (
                   <SelectItem key={status} value={status}>
                     {status}

@@ -48,7 +48,7 @@ export function AddCharacterDialog() {
       initiative: 0,
       maxHp: 0,
       currentHp: 0,
-      status: "",
+      status: "none", // Changed from empty string to "none"
     },
   });
 
@@ -56,7 +56,12 @@ export function AddCharacterDialog() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertCharacter) => {
-      return apiRequest("POST", "/api/characters", data);
+      // Convert "none" status to empty string before sending to server
+      const payload = {
+        ...data,
+        status: data.status === "none" ? "" : data.status,
+      };
+      return apiRequest("POST", "/api/characters", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
@@ -227,7 +232,7 @@ export function AddCharacterDialog() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {STATUS_OPTIONS.map((status) => (
                           <SelectItem key={status} value={status}>
                             {status}
