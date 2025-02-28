@@ -16,6 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   Tooltip,
   TooltipContent,
@@ -45,9 +46,11 @@ const STATUS_DESCRIPTIONS = {
 
 interface CharacterCardProps {
   character: Character;
+  isActive?: boolean;
+  layoutId: string;
 }
 
-export function CharacterCard({ character }: CharacterCardProps) {
+export function CharacterCard({ character, isActive, layoutId }: CharacterCardProps) {
   const { toast } = useToast();
   const [damageAmount, setDamageAmount] = useState<string>("");
   const [editingInitiative, setEditingInitiative] = useState(false);
@@ -125,146 +128,156 @@ export function CharacterCard({ character }: CharacterCardProps) {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2 space-y-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-lg truncate">{character.name}</h3>
-              {character.status && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center text-sm text-amber-600">
-                        <AlertCircle className="h-4 w-4 mr-1" />
-                        {character.status}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-sm">
-                      <p>{STATUS_DESCRIPTIONS[character.status as keyof typeof STATUS_DESCRIPTIONS]}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {character.type === "PC" ? (
-                <>
-                  {character.class && `${character.class} `}
-                  {character.level && `Level ${character.level}`}
-                </>
-              ) : (
-                <>
-                  {character.description && `${character.description} `}
-                  {character.cr !== undefined && `CR ${character.cr}`}
-                </>
-              )}
-              <div className="flex items-center gap-2 mt-1">
-                <Sword className="h-4 w-4" />
-                {editingInitiative ? (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      value={initiativeValue}
-                      onChange={(e) => setInitiativeValue(e.target.value)}
-                      className="w-20 h-6 text-sm"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleInitiativeSubmit();
-                        }
-                      }}
-                      onBlur={handleInitiativeSubmit}
-                    />
-                  </div>
-                ) : (
-                  <span 
-                    className="cursor-pointer hover:text-primary"
-                    onClick={() => {
-                      setEditingInitiative(true);
-                      setInitiativeValue(character.initiative?.toString() || "");
-                    }}
-                  >
-                    Initiative: {character.initiative || 0}
-                  </span>
+    <motion.div
+      layout
+      layoutId={layoutId}
+      className={`w-full transition-all duration-300 ${isActive ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="w-full">
+        <CardHeader className="pb-2 space-y-3">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-lg truncate">{character.name}</h3>
+                {character.status && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center text-sm text-amber-600">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          {character.status}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>{STATUS_DESCRIPTIONS[character.status as keyof typeof STATUS_DESCRIPTIONS]}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
+              <div className="text-sm text-muted-foreground">
+                {character.type === "PC" ? (
+                  <>
+                    {character.class && `${character.class} `}
+                    {character.level && `Level ${character.level}`}
+                  </>
+                ) : (
+                  <>
+                    {character.description && `${character.description} `}
+                    {character.cr !== undefined && `CR ${character.cr}`}
+                  </>
+                )}
+                <div className="flex items-center gap-2 mt-1">
+                  <Sword className="h-4 w-4" />
+                  {editingInitiative ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        value={initiativeValue}
+                        onChange={(e) => setInitiativeValue(e.target.value)}
+                        className="w-20 h-6 text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleInitiativeSubmit();
+                          }
+                        }}
+                        onBlur={handleInitiativeSubmit}
+                      />
+                    </div>
+                  ) : (
+                    <span 
+                      className="cursor-pointer hover:text-primary"
+                      onClick={() => {
+                        setEditingInitiative(true);
+                        setInitiativeValue(character.initiative?.toString() || "");
+                      }}
+                    >
+                      Initiative: {character.initiative || 0}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => deleteMutation.mutate()}
+              className="text-red-600 hover:text-red-800 -mt-1"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => deleteMutation.mutate()}
-            className="text-red-600 hover:text-red-800 -mt-1"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">
-              HP: {character.currentHp} / {character.maxHp}
-            </span>
-          </div>
-          <Progress
-            value={hpPercentage}
-            className={`h-2 ${getHealthColor()}`}
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              value={damageAmount}
-              onChange={(e) => setDamageAmount(e.target.value)}
-              placeholder="Amount"
-              className="w-20"
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">
+                HP: {character.currentHp} / {character.maxHp}
+              </span>
+            </div>
+            <Progress
+              value={hpPercentage}
+              className={`h-2 ${getHealthColor()}`}
             />
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => handleDamageHeal(false)}
-              className="flex-1"
-            >
-              <Swords className="h-4 w-4 mr-1" />
-              Damage
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDamageHeal(true)}
-              className="flex-1"
-            >
-              <Shield className="h-4 w-4 mr-1" />
-              Heal
-            </Button>
           </div>
-          <TooltipProvider>
-            <Select
-              value={character.status || "none"}
-              onValueChange={(value) => updateStatusMutation.mutate(value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Set status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {STATUS_OPTIONS.map((status) => (
-                  <Tooltip key={status}>
-                    <TooltipTrigger asChild>
-                      <SelectItem value={status}>{status}</SelectItem>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-sm">
-                      <p>{STATUS_DESCRIPTIONS[status]}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </SelectContent>
-            </Select>
-          </TooltipProvider>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                value={damageAmount}
+                onChange={(e) => setDamageAmount(e.target.value)}
+                placeholder="Amount"
+                className="w-20"
+              />
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDamageHeal(false)}
+                className="flex-1"
+              >
+                <Swords className="h-4 w-4 mr-1" />
+                Damage
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDamageHeal(true)}
+                className="flex-1"
+              >
+                <Shield className="h-4 w-4 mr-1" />
+                Heal
+              </Button>
+            </div>
+            <TooltipProvider>
+              <Select
+                value={character.status || "none"}
+                onValueChange={(value) => updateStatusMutation.mutate(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Set status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {STATUS_OPTIONS.map((status) => (
+                    <Tooltip key={status}>
+                      <TooltipTrigger asChild>
+                        <SelectItem value={status}>{status}</SelectItem>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>{STATUS_DESCRIPTIONS[status]}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </SelectContent>
+              </Select>
+            </TooltipProvider>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
