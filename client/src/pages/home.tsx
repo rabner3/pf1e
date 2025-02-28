@@ -9,6 +9,13 @@ export default function Home() {
     queryKey: ["/api/characters"],
   });
 
+  // Sort characters by initiative in descending order
+  const sortedCharacters = [...characters].sort((a, b) => {
+    const initiativeA = a.initiative ?? 0;
+    const initiativeB = b.initiative ?? 0;
+    return initiativeB - initiativeA;
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#F3F4F6] p-4">
@@ -39,7 +46,7 @@ export default function Home() {
           <AddCharacterDialog />
         </div>
 
-        {characters.length === 0 ? (
+        {sortedCharacters.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <Skull className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -51,7 +58,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {characters.map((character) => (
+            {sortedCharacters.map((character) => (
               <CharacterCard key={character.id} character={character} />
             ))}
           </div>
