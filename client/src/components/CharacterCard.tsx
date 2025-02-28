@@ -2,8 +2,15 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MinusCircle, PlusCircle, Trash2, Shield, Swords } from "lucide-react";
-import { type Character } from "@shared/schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MinusCircle, PlusCircle, Trash2, Shield, Swords, AlertCircle } from "lucide-react";
+import { type Character, STATUS_OPTIONS } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -28,6 +35,17 @@ export function CharacterCard({ character }: CharacterCardProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
       setDamageAmount("");
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async (status: string) => {
+      return apiRequest("PATCH", `/api/characters/${character.id}`, {
+        status,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
     },
   });
 
@@ -62,10 +80,27 @@ export function CharacterCard({ character }: CharacterCardProps) {
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div className="space-y-1">
-          <h3 className="font-bold text-lg">{character.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-lg">{character.name}</h3>
+            {character.status && (
+              <div className="flex items-center text-sm text-amber-600">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {character.status}
+              </div>
+            )}
+          </div>
           <div className="text-sm text-muted-foreground">
-            {character.class && `${character.class} `}
-            {character.level && `Level ${character.level}`}
+            {character.type === "PC" ? (
+              <>
+                {character.class && `${character.class} `}
+                {character.level && `Level ${character.level}`}
+              </>
+            ) : (
+              <>
+                {character.description && `${character.description} `}
+                {character.cr !== undefined && `CR ${character.cr}`}
+              </>
+            )}
             {character.initiative !== undefined && (
               <span className="ml-2">Initiative: {character.initiative}</span>
             )}
@@ -91,32 +126,50 @@ export function CharacterCard({ character }: CharacterCardProps) {
             value={hpPercentage}
             className={`h-2 ${getHealthColor()}`}
           />
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              value={damageAmount}
-              onChange={(e) => setDamageAmount(e.target.value)}
-              placeholder="Amount"
-              className="w-24"
-            />
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => handleDamageHeal(false)}
-              className="flex-1"
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                value={damageAmount}
+                onChange={(e) => setDamageAmount(e.target.value)}
+                placeholder="Amount"
+                className="w-24"
+              />
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDamageHeal(false)}
+                className="flex-1"
+              >
+                <Swords className="h-4 w-4 mr-2" />
+                Damage
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDamageHeal(true)}
+                className="flex-1"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Heal
+              </Button>
+            </div>
+            <Select
+              value={character.status || ""}
+              onValueChange={(value) => updateStatusMutation.mutate(value)}
             >
-              <Swords className="h-4 w-4 mr-2" />
-              Damage
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDamageHeal(true)}
-              className="flex-1"
-            >
-              <Shield className="h-4 w-4 mr-2" />
-              Heal
-            </Button>
+              <SelectTrigger>
+                <SelectValue placeholder="Set status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {STATUS_OPTIONS.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardContent>
