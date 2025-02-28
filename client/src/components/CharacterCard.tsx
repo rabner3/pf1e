@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Shield, Swords, AlertCircle } from "lucide-react";
+import { Trash2, Shield, Swords, AlertCircle, Sword } from "lucide-react";
 import { type Character, STATUS_OPTIONS } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -23,7 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Import STATUS_DESCRIPTIONS from AddCharacterDialog
+// Status effect descriptions
 const STATUS_DESCRIPTIONS = {
   Blinded: "Cannot see and takes -2 penalty to AC, loses Dex bonus to AC, -4 penalty on Search checks and most Str and Dex-based skill checks.",
   Confused: "Cannot act normally, roll d% to determine action each round.",
@@ -50,6 +50,8 @@ interface CharacterCardProps {
 export function CharacterCard({ character }: CharacterCardProps) {
   const { toast } = useToast();
   const [damageAmount, setDamageAmount] = useState<string>("");
+  const [editingInitiative, setEditingInitiative] = useState(false);
+  const [initiativeValue, setInitiativeValue] = useState(character.initiative?.toString() || "");
 
   const updateHpMutation = useMutation({
     mutationFn: async (delta: number) => {
@@ -76,6 +78,18 @@ export function CharacterCard({ character }: CharacterCardProps) {
     },
   });
 
+  const updateInitiativeMutation = useMutation({
+    mutationFn: async (initiative: number) => {
+      return apiRequest("PATCH", `/api/characters/${character.id}`, {
+        initiative,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
+      setEditingInitiative(false);
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("DELETE", `/api/characters/${character.id}`);
@@ -93,6 +107,13 @@ export function CharacterCard({ character }: CharacterCardProps) {
     const amount = parseInt(damageAmount);
     if (isNaN(amount)) return;
     updateHpMutation.mutate(isHealing ? amount : -amount);
+  };
+
+  const handleInitiativeSubmit = () => {
+    const initiative = parseInt(initiativeValue);
+    if (!isNaN(initiative)) {
+      updateInitiativeMutation.mutate(initiative);
+    }
   };
 
   const hpPercentage = (character.currentHp / character.maxHp) * 100;
@@ -138,9 +159,35 @@ export function CharacterCard({ character }: CharacterCardProps) {
                   {character.cr !== undefined && `CR ${character.cr}`}
                 </>
               )}
-              {character.initiative !== undefined && (
-                <span className="ml-2">Initiative: {character.initiative}</span>
-              )}
+              <div className="flex items-center gap-2 mt-1">
+                <Sword className="h-4 w-4" />
+                {editingInitiative ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={initiativeValue}
+                      onChange={(e) => setInitiativeValue(e.target.value)}
+                      className="w-20 h-6 text-sm"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleInitiativeSubmit();
+                        }
+                      }}
+                      onBlur={handleInitiativeSubmit}
+                    />
+                  </div>
+                ) : (
+                  <span 
+                    className="cursor-pointer hover:text-primary"
+                    onClick={() => {
+                      setEditingInitiative(true);
+                      setInitiativeValue(character.initiative?.toString() || "");
+                    }}
+                  >
+                    Initiative: {character.initiative || 0}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <Button
