@@ -33,6 +33,9 @@ export function AddCharacterDialog() {
     resolver: zodResolver(insertCharacterSchema),
     defaultValues: {
       name: "",
+      class: "",
+      level: 1,
+      initiative: 0,
       maxHp: 0,
       currentHp: 0,
     },
@@ -85,38 +88,89 @@ export function AddCharacterDialog() {
             />
             <FormField
               control={form.control}
-              name="maxHp"
+              name="class"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Maximum HP</FormLabel>
+                  <FormLabel>Class</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="currentHp"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current HP</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Level</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="initiative"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Initiative</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="maxHp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Maximum HP</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="currentHp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current HP</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <Button
               type="submit"
               className="w-full"

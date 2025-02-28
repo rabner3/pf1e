@@ -1,12 +1,14 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { MinusCircle, PlusCircle, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { MinusCircle, PlusCircle, Trash2, Shield, Swords } from "lucide-react";
 import { type Character } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface CharacterCardProps {
   character: Character;
@@ -14,6 +16,7 @@ interface CharacterCardProps {
 
 export function CharacterCard({ character }: CharacterCardProps) {
   const { toast } = useToast();
+  const [damageAmount, setDamageAmount] = useState<string>("");
 
   const updateHpMutation = useMutation({
     mutationFn: async (delta: number) => {
@@ -24,6 +27,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
+      setDamageAmount("");
     },
   });
 
@@ -40,6 +44,12 @@ export function CharacterCard({ character }: CharacterCardProps) {
     },
   });
 
+  const handleDamageHeal = (isHealing: boolean) => {
+    const amount = parseInt(damageAmount);
+    if (isNaN(amount)) return;
+    updateHpMutation.mutate(isHealing ? amount : -amount);
+  };
+
   const hpPercentage = (character.currentHp / character.maxHp) * 100;
   const getHealthColor = () => {
     if (hpPercentage <= 25) return "bg-[#991B1B]";
@@ -51,7 +61,16 @@ export function CharacterCard({ character }: CharacterCardProps) {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <h3 className="font-bold text-lg">{character.name}</h3>
+        <div className="space-y-1">
+          <h3 className="font-bold text-lg">{character.name}</h3>
+          <div className="text-sm text-muted-foreground">
+            {character.class && `${character.class} `}
+            {character.level && `Level ${character.level}`}
+            {character.initiative !== undefined && (
+              <span className="ml-2">Initiative: {character.initiative}</span>
+            )}
+          </div>
+        </div>
         <Button
           variant="ghost"
           size="icon"
@@ -62,34 +81,43 @@ export function CharacterCard({ character }: CharacterCardProps) {
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
               HP: {character.currentHp} / {character.maxHp}
             </span>
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => updateHpMutation.mutate(-1)}
-                className="h-6 w-6"
-              >
-                <MinusCircle className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => updateHpMutation.mutate(1)}
-                className="h-6 w-6"
-              >
-                <PlusCircle className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
           <Progress
             value={hpPercentage}
             className={`h-2 ${getHealthColor()}`}
           />
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              value={damageAmount}
+              onChange={(e) => setDamageAmount(e.target.value)}
+              placeholder="Amount"
+              className="w-24"
+            />
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => handleDamageHeal(false)}
+              className="flex-1"
+            >
+              <Swords className="h-4 w-4 mr-2" />
+              Damage
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDamageHeal(true)}
+              className="flex-1"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Heal
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
