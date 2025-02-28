@@ -31,13 +31,42 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import * as z from 'zod';
+
+// Status effect descriptions
+const STATUS_DESCRIPTIONS = {
+  Blinded: "Cannot see and takes -2 penalty to AC, loses Dex bonus to AC, -4 penalty on Search checks and most Str and Dex-based skill checks.",
+  Confused: "Cannot act normally, roll d% to determine action each round.",
+  Dazed: "Unable to act, can take no actions, -2 to AC, loses Dex bonus to AC.",
+  Dazzled: "-1 penalty on attack rolls and sight-based Perception checks.",
+  Deafened: "-4 penalty on initiative, automatically fails Perception checks based on sound.",
+  Entangled: "Movement reduced by half, -2 penalty to attack rolls, -4 penalty to Dex.",
+  Exhausted: "Move at half speed, -6 to Str and Dex, cannot run or charge.",
+  Fatigued: "-2 penalty to Str and Dex, cannot run or charge.",
+  Frightened: "-2 penalty on attack rolls, saving throws, skill checks, and ability checks, must flee from source.",
+  Nauseated: "Can only take a single move action per turn, cannot attack, cast spells, or concentrate.",
+  Panicked: "Drop items, flee from source, -2 on all checks and saves.",
+  Paralyzed: "Cannot move or act, effective Dex and Str of 0, flying creatures fall.",
+  Prone: "-4 penalty on attack rolls, +4 AC bonus vs ranged, -4 AC penalty vs melee.",
+  Shaken: "-2 penalty on attack rolls, saving throws, skill checks, and ability checks.",
+  Sickened: "-2 penalty on attack rolls, weapon damage rolls, saving throws, skill checks, and ability checks.",
+  Stunned: "Drop items held, -2 to AC, lose Dex bonus to AC.",
+} as const;
 
 export function AddCharacterDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
-  const form = useForm<InsertCharacter>({
-    resolver: zodResolver(insertCharacterSchema),
+  const form = useForm<InsertCharacter & { quantity?: number }>({
+    resolver: zodResolver(insertCharacterSchema.extend({
+      quantity: z.number().min(1).optional(),
+    })),
     defaultValues: {
       name: "",
       type: "PC",
@@ -48,20 +77,35 @@ export function AddCharacterDialog() {
       initiative: 0,
       maxHp: 0,
       currentHp: 0,
-      status: "none", // Changed from empty string to "none"
+      status: "none",
+      quantity: 1,
     },
   });
 
   const characterType = form.watch("type");
 
   const createMutation = useMutation({
-    mutationFn: async (data: InsertCharacter) => {
+    mutationFn: async (data: InsertCharacter & { quantity?: number }) => {
+      const { quantity, ...characterData } = data;
       // Convert "none" status to empty string before sending to server
       const payload = {
-        ...data,
-        status: data.status === "none" ? "" : data.status,
+        ...characterData,
+        status: characterData.status === "none" ? "" : characterData.status,
       };
-      return apiRequest("POST", "/api/characters", payload);
+
+      if (data.type === "NPC" && quantity && quantity > 1) {
+        // Create multiple NPCs
+        const promises = Array.from({ length: quantity }, (_, i) => {
+          const npcPayload = {
+            ...payload,
+            name: `${payload.name} ${i + 1}`,
+          };
+          return apiRequest("POST", "/api/characters", npcPayload);
+        });
+        return Promise.all(promises);
+      } else {
+        return apiRequest("POST", "/api/characters", payload);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
@@ -178,23 +222,43 @@ export function AddCharacterDialog() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="cr"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Challenge Rating (CR)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="cr"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Challenge Rating (CR)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quantity</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </>
             )}
 
@@ -234,9 +298,16 @@ export function AddCharacterDialog() {
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
                         {STATUS_OPTIONS.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
-                          </SelectItem>
+                          <TooltipProvider key={status}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <SelectItem value={status}>{status}</SelectItem>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-sm">
+                                <p>{STATUS_DESCRIPTIONS[status]}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         ))}
                       </SelectContent>
                     </Select>

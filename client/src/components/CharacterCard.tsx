@@ -16,6 +16,32 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+// Import STATUS_DESCRIPTIONS from AddCharacterDialog
+const STATUS_DESCRIPTIONS = {
+  Blinded: "Cannot see and takes -2 penalty to AC, loses Dex bonus to AC, -4 penalty on Search checks and most Str and Dex-based skill checks.",
+  Confused: "Cannot act normally, roll d% to determine action each round.",
+  Dazed: "Unable to act, can take no actions, -2 to AC, loses Dex bonus to AC.",
+  Dazzled: "-1 penalty on attack rolls and sight-based Perception checks.",
+  Deafened: "-4 penalty on initiative, automatically fails Perception checks based on sound.",
+  Entangled: "Movement reduced by half, -2 penalty to attack rolls, -4 penalty to Dex.",
+  Exhausted: "Move at half speed, -6 to Str and Dex, cannot run or charge.",
+  Fatigued: "-2 penalty to Str and Dex, cannot run or charge.",
+  Frightened: "-2 penalty on attack rolls, saving throws, skill checks, and ability checks, must flee from source.",
+  Nauseated: "Can only take a single move action per turn, cannot attack, cast spells, or concentrate.",
+  Panicked: "Drop items, flee from source, -2 on all checks and saves.",
+  Paralyzed: "Cannot move or act, effective Dex and Str of 0, flying creatures fall.",
+  Prone: "-4 penalty on attack rolls, +4 AC bonus vs ranged, -4 AC penalty vs melee.",
+  Shaken: "-2 penalty on attack rolls, saving throws, skill checks, and ability checks.",
+  Sickened: "-2 penalty on attack rolls, weapon damage rolls, saving throws, skill checks, and ability checks.",
+  Stunned: "Drop items held, -2 to AC, lose Dex bonus to AC.",
+} as const;
 
 interface CharacterCardProps {
   character: Character;
@@ -85,10 +111,19 @@ export function CharacterCard({ character }: CharacterCardProps) {
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-lg truncate">{character.name}</h3>
               {character.status && (
-                <div className="flex items-center text-sm text-amber-600">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {character.status}
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center text-sm text-amber-600">
+                        <AlertCircle className="h-4 w-4 mr-1" />
+                        {character.status}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <p>{STATUS_DESCRIPTIONS[character.status as keyof typeof STATUS_DESCRIPTIONS]}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
             <div className="text-sm text-muted-foreground">
@@ -158,22 +193,29 @@ export function CharacterCard({ character }: CharacterCardProps) {
               Heal
             </Button>
           </div>
-          <Select
-            value={character.status || "none"}
-            onValueChange={(value) => updateStatusMutation.mutate(value)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Set status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {STATUS_OPTIONS.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <TooltipProvider>
+            <Select
+              value={character.status || "none"}
+              onValueChange={(value) => updateStatusMutation.mutate(value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Set status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {STATUS_OPTIONS.map((status) => (
+                  <Tooltip key={status}>
+                    <TooltipTrigger asChild>
+                      <SelectItem value={status}>{status}</SelectItem>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <p>{STATUS_DESCRIPTIONS[status]}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </SelectContent>
+            </Select>
+          </TooltipProvider>
         </div>
       </CardContent>
     </Card>
