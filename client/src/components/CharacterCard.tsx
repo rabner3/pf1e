@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Shield, Swords, AlertCircle, Sword } from "lucide-react";
+import { Trash2, Swords, AlertCircle, Sword, Shield } from "lucide-react";
 import { type Character, STATUS_OPTIONS } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

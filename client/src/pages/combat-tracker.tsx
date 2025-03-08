@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { type Character } from "@shared/schema";
 import { CharacterCard } from "@/components/CharacterCard";
-import { AddCharacterDialog } from "@/components/AddCharacterDialog";
+import AddCharacterDialog from "@/components/AddCharacterDialog";
 import { TurnTracker } from "@/components/TurnTracker";
 import { Skull, ArrowLeft } from "lucide-react";
 import { useState } from "react";
