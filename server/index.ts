@@ -1,6 +1,8 @@
+// server/index.ts
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { hostname } from "os";
 
 const app = express();
 app.use(express.json());
@@ -59,11 +61,9 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  
+  // Versión simplificada de la configuración del servidor
+  server.listen(port, '127.0.0.1', () => {
+    log(`servidor ejecutándose en http://127.0.0.1:${port}`);
   });
 })();

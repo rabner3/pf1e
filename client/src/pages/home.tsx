@@ -1,113 +1,78 @@
-import { useQuery } from "@tanstack/react-query";
-import { type Character } from "@shared/schema";
-import { CharacterCard } from "@/components/CharacterCard";
-import { AddCharacterDialog } from "@/components/AddCharacterDialog";
-import { TurnTracker } from "@/components/TurnTracker";
-import { Skull } from "lucide-react";
-import { useState } from "react";
-import { AnimatePresence } from "framer-motion";
+// client/src/pages/home.tsx
+import { Skull, UserCircle, Users, FileText, Dice6 } from "lucide-react";
+import { Link } from "wouter";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Home() {
-  const { data: characters = [], isLoading } = useQuery<Character[]>({
-    queryKey: ["/api/characters"],
-  });
-
-  // Turn tracking state
-  const [currentTurn, setCurrentTurn] = useState(0);
-  const [currentRound, setCurrentRound] = useState(1);
-
-  // Sort characters by initiative in descending order
-  const sortedCharacters = [...characters].sort((a, b) => {
-    const initiativeA = a.initiative ?? 0;
-    const initiativeB = b.initiative ?? 0;
-    return initiativeB - initiativeA;
-  });
-
-  const handleNextTurn = () => {
-    if (currentTurn >= sortedCharacters.length - 1) {
-      // Start a new round
-      setCurrentTurn(0);
-      setCurrentRound(currentRound + 1);
-    } else {
-      setCurrentTurn(currentTurn + 1);
+  const tools = [
+    {
+      title: "Combat Tracker",
+      description: "Gestiona encuentros de combate con iniciativa y seguimiento de personajes",
+      icon: <Skull className="h-8 w-8 text-[#B91C1C]" />,
+      href: "/combat-tracker"
+    },
+    {
+      title: "Ficha de Jugador",
+      description: "Crea y gestiona fichas para personajes jugadores",
+      icon: <UserCircle className="h-8 w-8 text-[#B91C1C]" />,
+      href: "/player-sheet"
+    },
+    {
+      title: "Ficha de NPC",
+      description: "Diseña personajes no jugadores para tus aventuras",
+      icon: <Users className="h-8 w-8 text-[#B91C1C]" />,
+      href: "/npc-sheet"
+    },
+    {
+      title: "Fichas Guardadas",
+      description: "Accede a todas tus fichas de personajes creadas",
+      icon: <FileText className="h-8 w-8 text-[#B91C1C]" />,
+      href: "/saved-sheets"
+    },
+    {
+      title: "Tirador de Dados",
+      description: "Lanza dados virtuales para resolver acciones y chequeos",
+      icon: <Dice6 className="h-8 w-8 text-[#B91C1C]" />,
+      href: "/dice-roller"
     }
-  };
-
-  const handlePreviousTurn = () => {
-    if (currentTurn <= 0) {
-      // Go to previous round
-      if (currentRound > 1) {
-        setCurrentTurn(sortedCharacters.length - 1);
-        setCurrentRound(currentRound - 1);
-      }
-    } else {
-      setCurrentTurn(currentTurn - 1);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#F3F4F6] p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 bg-gray-200 rounded w-1/4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-40 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  ];
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
-            <Skull className="h-8 w-8 text-[#B91C1C] mr-2" />
-            <h1 className="text-2xl font-bold text-[#111827]">
-              PF1E Combat Tracker
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-10">
+          <div className="flex items-center justify-center mb-4">
+            <Skull className="h-10 w-10 text-[#B91C1C] mr-2" />
+            <h1 className="text-3xl font-bold text-[#111827]">
+              Pathfinder 1 Edition Utilities
             </h1>
           </div>
-          <AddCharacterDialog />
+          <p className="text-gray-500 max-w-2xl mx-auto">
+            Herramientas esenciales para jugadores y directores de juego de Pathfinder 1ª Edición
+          </p>
         </div>
 
-        {sortedCharacters.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <Skull className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Characters in Combat
-            </h3>
-            <p className="text-gray-500">
-              Add characters to begin tracking combat
-            </p>
-          </div>
-        ) : (
-          <>
-            <TurnTracker
-              characters={sortedCharacters}
-              currentTurn={currentTurn}
-              currentRound={currentRound}
-              onNextTurn={handleNextTurn}
-              onPreviousTurn={handlePreviousTurn}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <AnimatePresence>
-                {sortedCharacters.map((character, index) => (
-                  <CharacterCard
-                    key={character.id}
-                    character={character}
-                    isActive={index === currentTurn}
-                    layoutId={`character-${character.id}`}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          </>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tools.map((tool) => (
+            <Link key={tool.title} href={tool.href}>
+              <a className="block h-full transition-transform hover:scale-105">
+                <Card className="h-full border shadow-md hover:shadow-lg">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      {tool.icon}
+                      <CardTitle className="text-xl">{tool.title}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-sm text-gray-600">
+                      {tool.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </a>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );
