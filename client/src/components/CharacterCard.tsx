@@ -178,6 +178,12 @@ export function CharacterCard({ character, isActive, layoutId }: CharacterCardPr
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
+                  <Shield className="h-4 w-4" />
+                  <span className="text-sm">
+                    AC: {character.ac || "N/A"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
                   <Sword className="h-4 w-4" />
                   {editingInitiative ? (
                     <div className="flex items-center gap-2">

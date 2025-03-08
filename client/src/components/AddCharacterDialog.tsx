@@ -59,7 +59,7 @@ const STATUS_DESCRIPTIONS = {
   Stunned: "Drop items held, -2 to AC, lose Dex bonus to AC.",
 } as const;
 
-export function AddCharacterDialog() {
+export default function AddCharacterDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
