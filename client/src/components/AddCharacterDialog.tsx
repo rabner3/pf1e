@@ -72,6 +72,7 @@ export function AddCharacterDialog() {
       type: "PC",
       class: "",
       level: 1,
+      ac: 10,
       description: "",
       cr: 1,
       initiative: 0,
@@ -318,6 +319,23 @@ export function AddCharacterDialog() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="ac"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Armor Class (AC)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="maxHp"
