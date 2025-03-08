@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Shield, Swords, AlertCircle, Sword } from "lucide-react";
+import { Trash2, Swords, AlertCircle, Sword, Shield } from "lucide-react";
 import { type Character, STATUS_OPTIONS } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -171,6 +171,18 @@ export function CharacterCard({ character, isActive, layoutId }: CharacterCardPr
                     {character.cr !== undefined && `CR ${character.cr}`}
                   </>
                 )}
+                <div className="flex items-center gap-2 mt-1">
+                  <Shield className="h-4 w-4" />
+                  <span className="text-sm">
+                    AC: {character.ac || "N/A"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <Shield className="h-4 w-4" />
+                  <span className="text-sm">
+                    AC: {character.ac || "N/A"}
+                  </span>
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   <Sword className="h-4 w-4" />
                   {editingInitiative ? (

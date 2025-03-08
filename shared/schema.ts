@@ -9,6 +9,7 @@ export const characters = pgTable("characters", {
   // PC-specific fields
   class: text("class"),
   level: integer("level"),
+  ac: integer("ac"),
   // NPC-specific fields
   description: text("description"),
   cr: integer("cr"),
@@ -26,6 +27,7 @@ export const insertCharacterSchema = createInsertSchema(characters)
     class: true,
     level: true,
     description: true,
+    ac: true,
     cr: true,
     initiative: true,
     maxHp: true,
@@ -40,6 +42,7 @@ export const insertCharacterSchema = createInsertSchema(characters)
     class: z.string().optional(),
     level: z.number().min(1, "Level must be at least 1").optional(),
     description: z.string().optional(),
+    ac: z.number().min(0, "AC cannot be negative").optional(),
     cr: z.number().min(0, "CR cannot be negative").optional(),
     initiative: z.number().optional(),
     maxHp: z.number().min(1, "Max HP must be at least 1"),
